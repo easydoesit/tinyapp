@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/easydoesit/tinyapp/issues"
   },
-  "homepage": "https://github.com/easydoesit/tinyapp#readme"
+  "homepage": "https://github.com/easydoesit/tinyapp#readme",
+  "devDependencies": {
+    "express": "^4.18.2"
+  }
 }
