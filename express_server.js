@@ -11,16 +11,9 @@ const fs = require('fs');
 ////////////////////////////////////////////////////
 
 const urlDatabase = require("./data/urlDataBase.json");
-console.log(urlDatabase);
+//console.log(urlDatabase);
 
-const writeToFile = (fileLocation, body) => {
-  fs.writeFile(fileLocation, body, error => {
-    if (error) {
-      console.error(error);
-    }
-    console.log(`Downloaded and saved ${body.length} bytes to ${fileLocation}`);
-  });
-};
+
 
 
 // use ejs
@@ -63,20 +56,20 @@ app.post("/urls", (req, res) => {
   const shortUrl = generateRandomString(6);
   urlDatabase[shortUrl] = req.body.longURL;
   
-  // Write database to File. TODO - Do it one line at a time. Move into helper function.
+  // Write database to File.
+  writeToFile('./data/urlDataBase.json', urlDatabase);
   
-  const jsonString = JSON.stringify(urlDatabase);
-  
-  fs.writeFile('./data/urlDataBase.json', jsonString, err => {
-    if (err) {
-      console.log('Error writing file', err);
-    } else {
-      console.log('Successfully wrote file');
-    }
-  });
-
   res.redirect(303, `/urls/${shortUrl}`);
 
+});
+
+// Delete URL
+app.post(`/urls/:id/delete`, (req, res) => {
+  delete urlDatabase[req.params.id];
+  // Write database to File.
+  writeToFile('./data/urlDataBase.json', urlDatabase);
+  
+  res.redirect(301, '/urls');
 });
 
 // Show Url by ID
@@ -119,3 +112,19 @@ const generateRandomString = function(size) {
   }
   return result;
 };
+
+// write to file takes a file and the info you want to write. TODO - Make it write one line at a time.
+const writeToFile = function(file, body) {
+  const jsonString = JSON.stringify(body);
+
+  fs.writeFile(file, jsonString, err => {
+    if (err) {
+      console.log('Error writing file', err);
+    } else {
+      console.log('Successfully wrote file');
+    }
+  });
+
+};
+
+
