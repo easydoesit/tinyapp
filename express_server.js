@@ -1,22 +1,33 @@
+// express setup
 const express = require("express");
 const app = express();
 const PORT = 8080;
+
+// file-system Setup
+const fs = require('fs');
+
+////////////////////////////////////////////////////
+// Database
+////////////////////////////////////////////////////
+
+const urlDatabase = require("./data/urlDataBase.json");
+console.log(urlDatabase);
+
+const writeToFile = (fileLocation, body) => {
+  fs.writeFile(fileLocation, body, error => {
+    if (error) {
+      console.error(error);
+    }
+    console.log(`Downloaded and saved ${body.length} bytes to ${fileLocation}`);
+  });
+};
+
 
 // use ejs
 app.set("view engine", "ejs");
 
 // parse data in buffer to make it readable.
 app.use(express.urlencoded({ extended: true }));
-
-
-////////////////////////////////////////////////////
-// Database
-////////////////////////////////////////////////////
-
-const urlDatabase = {
-  "b2xVn2" : "http://www.lighthouselabs.ca",
-  "9sm5xK" : "http://www.google.com"
-};
 
 ////////////////////////////////////////////////////
 // Routes
@@ -52,7 +63,19 @@ app.post("/urls", (req, res) => {
   const shortUrl = generateRandomString(6);
   urlDatabase[shortUrl] = req.body.longURL;
   
-  res.redirect(`/urls/${shortUrl}`);
+  // Write database to File. TODO - Do it one line at a time. Move into helper function.
+  
+  const jsonString = JSON.stringify(urlDatabase);
+  
+  fs.writeFile('./data/urlDataBase.json', jsonString, err => {
+    if (err) {
+      console.log('Error writing file', err);
+    } else {
+      console.log('Successfully wrote file');
+    }
+  });
+
+  res.redirect(303, `/urls/${shortUrl}`);
 
 });
 
@@ -72,7 +95,7 @@ app.get("/u/:id", (req, res) => {
   if (longURL === undefined) {
     res.render('urls_noID');
   } else {
-    res.redirect(longURL);
+    res.redirect(301, longURL);
   }
 });
 
