@@ -13,14 +13,18 @@ const fs = require('fs');
 const urlDatabase = require("./data/urlDataBase.json");
 //console.log(urlDatabase);
 
-
-
-
 // use ejs
 app.set("view engine", "ejs");
 
 // parse data in buffer to make it readable.
 app.use(express.urlencoded({ extended: true }));
+
+////////////////////////////////////////////////////
+// Cookies
+////////////////////////////////////////////////////
+
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 ////////////////////////////////////////////////////
 // Routes
@@ -38,15 +42,41 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
 
+
+// Sign in
+app.post("/login", (req, res) => {
+  console.log(req.body);
+
+  res.cookie('username', req.body);
+
+  res.redirect(303, `/urls`);
+
+});
+
+// Sign Out
+app.post("/logout", (req, res) => {
+  console.log(req.body);
+  res.clearCookie('username', req.body);
+
+  res.redirect(303, `/urls`);
+
+});
+
 // All Urls List
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase};
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+
   res.render('urls_index', templateVars);
+
 });
 
 // New URL Form SHOW
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = { username: req.cookies["username"]};
+  res.render("urls_new", templateVars);
 });
 
 // Submit new URL
@@ -58,7 +88,20 @@ app.post("/urls", (req, res) => {
   
   // Write database to File.
   writeToFile('./data/urlDataBase.json', urlDatabase);
-  
+
+  res.redirect(303, `/urls/${shortUrl}`);
+
+});
+
+// Update an URL
+app.post("/urls/:id", (req, res) => {
+  //console.log(req.body);
+  const shortUrl = [req.params.id];
+  //console.log(shortUrl);
+  urlDatabase[shortUrl] = req.body.longURL;
+
+  writeToFile('./data/urlDataBase.json', urlDatabase);
+
   res.redirect(303, `/urls/${shortUrl}`);
 
 });
