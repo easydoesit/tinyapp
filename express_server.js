@@ -75,11 +75,12 @@ app.post("/register", (req, res) => {
 // Sign in
 
 app.get("/login", (req, res) =>{
-
+  res.render("login");
 });
 
 app.post("/login", (req, res) => {
-  console.log(req.body);
+  const email = req.body.email;
+  const password = req.body.password;
 
   res.cookie('userID', req.body);
 
