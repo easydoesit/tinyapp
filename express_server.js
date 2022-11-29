@@ -12,13 +12,16 @@ app.use(express.urlencoded({ extended: true }));
 // file-system Setup
 const fs = require('fs');
 
+// middleware set up
+const morgan = require("morgan");
+app.use(morgan('dev'));
+
 ////////////////////////////////////////////////////
 // Databases
 ////////////////////////////////////////////////////
 
 const urlDatabase = require("./data/urlDataBase.json");
 const users = require("./data/users.json");
-//console.log(urlDatabase);
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
