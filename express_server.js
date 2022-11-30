@@ -53,7 +53,8 @@ app.get("/hello", (req, res) => {
 
 // register
 app.get("/register", (req, res) => {
-  res.render("register");
+  const templateVars = { user: users[req.cookies["userID"]]};
+  res.render("register", templateVars);
 });
 
 app.post("/register", (req, res) => {
@@ -79,11 +80,11 @@ app.post("/register", (req, res) => {
 
 });
 
-// Sign in
+// Login
 
 app.get("/login", (req, res) =>{
-  
-  res.render("login");
+  const templateVars = { user: users[req.cookies["userID"]]};
+  res.render("login", templateVars);
 
 });
 
@@ -95,19 +96,19 @@ app.post("/login", (req, res) => {
 
   if (!email || !password) {
 
-    return res.status(400).send("Error: 400. You must include a name and password.");
+    return res.status(403).send("Error: 400. You must include a name and password.");
   
   }
   
   if (!userLookUpByEmail(email)) {
 
-    return res.status(400).send("Error: 400. That email doesnt' exist");
+    return res.status(403).send("Error: 403. That email doesnt' exist");
 
   }
 
   if (!userCheckPassword(password)) {
 
-    return res.status(400).send("Error: 400. That password is wrong");
+    return res.status(400).send("Error: 403. That password is wrong");
   
   }
 
@@ -123,7 +124,7 @@ app.post("/logout", (req, res) => {
 
   res.clearCookie('userID', req.body);
 
-  res.redirect(303, `/urls`);
+  res.redirect(303, `/login`);
 
 });
 
