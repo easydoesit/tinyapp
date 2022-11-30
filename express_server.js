@@ -68,8 +68,6 @@ app.post("/register", (req, res) => {
     const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. That email already exists."};
     return res.status(400).render('errors', templateVars);
 
-
-
   }
 
   const userID = generateRandomString(6);
@@ -136,8 +134,17 @@ app.post("/logout", (req, res) => {
 
 // All Urls List
 app.get("/urls", (req, res) => {
+  const userID = req.cookies.userID;
+
+  if (!userID) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You need to log in to see urls"};
+    
+    return res.status(401).render('errors', templateVars);
+  
+  }
+  
   const templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(userID),
     user: users[req.cookies["userID"]]
   };
 
@@ -165,11 +172,13 @@ app.post("/urls", (req, res) => {
     const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You must login to shorten an url."};
     return res.status(401).render('errors', templateVars);
   }
-
+  console.log(req.body.longURL);
   const shortUrl = generateRandomString(6);
-  urlDatabase[shortUrl] = req.body.longURL;
-  
-  // Write database to File.
+  console.log(shortUrl);
+  urlDatabase[shortUrl] = {
+    longURL : req.body.longURL,
+    userID : userID
+  };
   writeToFile('./data/urlDataBase.json', urlDatabase);
 
   res.redirect(303, `/urls/${shortUrl}`);
@@ -178,8 +187,9 @@ app.post("/urls", (req, res) => {
 
 // Update an URL
 app.post("/urls/:id", (req, res) => {
+  console.log(req.body);
   const shortUrl = [req.params.id];
-  urlDatabase[shortUrl] = req.body.longURL;
+  urlDatabase[shortUrl].longURL = req.body.longURL;
 
   writeToFile('./data/urlDataBase.json', urlDatabase);
   
@@ -189,31 +199,60 @@ app.post("/urls/:id", (req, res) => {
 
 // Delete URL
 app.post(`/urls/:id/delete`, (req, res) => {
+  const userID = req.cookies.userID;
+
+  if (!userID) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You must login."};
+    return res.status(401).render('errors', templateVars);
+  }
+
+  if (!urlDatabase[req.params.id]) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Im sorry that url doesn't exist"};
+    return res.render('errors', templateVars);
+  }
+  
+  if (urlDatabase[req.params.id].userID !== userID) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. No ShortURl Like that."};
+    return res.status(401).render('errors', templateVars);
+  }
 
   delete urlDatabase[req.params.id];
 
   writeToFile('./data/urlDataBase.json', urlDatabase);
-  
-  res.redirect(301, '/urls');
+  const templateVars = { user: users[req.cookies["userID"]]};
+  res.redirect(301, '/urls', templateVars);
 
 });
 
 // Show Url by ID
 app.get("/urls/:id", (req, res) => {
+  const userID = req.cookies.userID;
+  console.log(req.params);
 
+  if (!userID) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You must login."};
+    return res.status(401).render('errors', templateVars);
+  }
+ 
   if (!urlDatabase[req.params.id]) {
     const templateVars = { user: users[req.cookies["userID"]], noURLID: "Im sorry that url doesn't exist"};
-    res.render('errors', templateVars);
-  } else {
-    const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies["userID"]] };
-    res.render("urls_show", templateVars);
+    return res.render('errors', templateVars);
   }
+
+  if (urlDatabase[req.params.id].userID !== userID) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. No ShortURl Like that."};
+    return res.status(401).render('errors', templateVars);
+  }
+  
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies["userID"]] };
+  res.render("urls_show", templateVars);
+
 
 });
 
 // Redirect to Long URL
 app.get("/u/:id", (req, res) => {
-  const longURL = (urlDatabase[req.params.id]);
+  const longURL = (urlDatabase[req.params.id].longURL);
   const templateVars = { user: users[req.cookies["userID"]]};
 
   if (longURL === undefined) {
@@ -297,4 +336,17 @@ const userCheckPassword = function(password) {
 
 };
 
+const urlsForUser = function(userID) {
+  const usersURLs = {};
 
+  for (let key of Object.keys(urlDatabase)) {
+    
+    if (urlDatabase[key].userID === userID) {
+      usersURLs[key] = {};
+      usersURLs[key].longURL = urlDatabase[key].longURL;
+    }
+
+  }
+
+  return usersURLs;
+};
