@@ -19,7 +19,10 @@
   <body>
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
-      <p>I'm sorry that url Id doesn't exist.</p>
+      <div class="w-50 mx-auto">
+      <p><%=noURLID %></p><br />
+      <button onclick="history.back()" class="btn btn-primary my-2 my-sm-0">Go Back</button>
+      </div>
     </main>
     <!-- Bootstrap JS -->
     <script

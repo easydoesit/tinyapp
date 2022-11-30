@@ -23,15 +23,6 @@ app.use(morgan('dev'));
 const urlDatabase = require("./data/urlDataBase.json");
 const users = require("./data/users.json");
 
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
-// app.get("/register.json", (req, res) => {
-//   res.json(users);
-// });
-
-
 ////////////////////////////////////////////////////
 // Cookies
 ////////////////////////////////////////////////////
@@ -53,6 +44,11 @@ app.get("/hello", (req, res) => {
 
 // register
 app.get("/register", (req, res) => {
+  const userID = req.cookies.userID;
+  if (userID) {
+    return res.redirect('/urls');
+  }
+
   const templateVars = { user: users[req.cookies["userID"]]};
   res.render("register", templateVars);
 });
@@ -62,13 +58,17 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
 
   if (!email || !password) {
-
-    return res.status(400).send("Error: 400. You must include a name and password.");
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. You must include a name and password."};
+    
+    return res.status(400).render('errors', templateVars);
+  
   }
   
   if (userLookUpByEmail(email)) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. That email already exists."};
+    return res.status(400).render('errors', templateVars);
 
-    return res.status(400).send("Error: 400. That email already exists");
+
 
   }
 
@@ -83,6 +83,11 @@ app.post("/register", (req, res) => {
 // Login
 
 app.get("/login", (req, res) =>{
+  const userID = req.cookies.userID;
+  if (userID) {
+    return res.redirect('/urls');
+  }
+
   const templateVars = { user: users[req.cookies["userID"]]};
   res.render("login", templateVars);
 
@@ -96,23 +101,24 @@ app.post("/login", (req, res) => {
 
   if (!email || !password) {
 
-    return res.status(403).send("Error: 400. You must include a name and password.");
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. You must include a name and password."};
+    return res.status(403).render('errors', templateVars);
   
   }
   
   if (!userLookUpByEmail(email)) {
-
-    return res.status(403).send("Error: 403. That email doesnt' exist");
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 403. That email doesnt' exist"};
+    return res.status(403).render('errors', templateVars);
 
   }
 
   if (!userCheckPassword(password)) {
-
-    return res.status(400).send("Error: 403. That password is wrong");
-  
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. That password is wrong"};
+    return res.status(401).render('errors', templateVars);
   }
 
   const userID = userLookUpByEmail(email);
+  
   res.cookie('userID', userID);
 
   res.redirect(303, `/urls`);
@@ -141,6 +147,11 @@ app.get("/urls", (req, res) => {
 
 // New URL Form SHOW
 app.get("/urls/new", (req, res) => {
+  const userID = req.cookies.userID;
+  if (!userID) {
+    return res.redirect('/login');
+  }
+
   const templateVars = { user: users[req.cookies["userID"]]};
 
   res.render("urls_new", templateVars);
@@ -149,6 +160,12 @@ app.get("/urls/new", (req, res) => {
 
 // Submit new URL
 app.post("/urls", (req, res) => {
+  const userID = req.cookies.userID;
+  if (!userID) {
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You must login to shorten an url."};
+    return res.status(401).render('errors', templateVars);
+  }
+
   const shortUrl = generateRandomString(6);
   urlDatabase[shortUrl] = req.body.longURL;
   
@@ -185,8 +202,8 @@ app.post(`/urls/:id/delete`, (req, res) => {
 app.get("/urls/:id", (req, res) => {
 
   if (!urlDatabase[req.params.id]) {
-    const templateVars = { user: users[req.cookies["userID"]]};
-    res.render('urls_noID', templateVars);
+    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Im sorry that url doesn't exist"};
+    res.render('errors', templateVars);
   } else {
     const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies["userID"]] };
     res.render("urls_show", templateVars);
