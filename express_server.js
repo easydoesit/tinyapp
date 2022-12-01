@@ -3,6 +3,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+// bcrypt setup
+const bcrypt = require("bcryptjs");
+
 // use ejs
 app.set("view engine", "ejs");
 
@@ -56,6 +59,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (!email || !password) {
     const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. You must include a name and password."};
@@ -71,14 +75,14 @@ app.post("/register", (req, res) => {
   }
 
   const userID = generateRandomString(6);
-  users[userID] = {id: userID, email : email, password : password};
+  users[userID] = {id: userID, email : email, password : hashedPassword};
   writeToFile('./data/users.json', users);
   res.cookie('userID', userID);
   res.redirect(301, '/urls');
 
 });
 
-// Login
+// Login Get and Render
 
 app.get("/login", (req, res) =>{
   const userID = req.cookies.userID;
@@ -91,6 +95,7 @@ app.get("/login", (req, res) =>{
 
 });
 
+// Login Post
 app.post("/login", (req, res) => {
 
   const email = req.body.email;
@@ -324,10 +329,8 @@ const userCheckPassword = function(password) {
   let passwordCheck = false;
 
   for (let key of Object.keys(users)) {
-
-    if (users[key].password === password) {
+    if  (bcrypt.compareSync(password, users[key].password)) {
       passwordCheck = true;
-    
     }
   
   }
@@ -336,6 +339,7 @@ const userCheckPassword = function(password) {
 
 };
 
+// make an object of the URLS for a user.
 const urlsForUser = function(userID) {
   const usersURLs = {};
 
