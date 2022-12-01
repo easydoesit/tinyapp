@@ -20,7 +20,7 @@ const morgan = require("morgan");
 app.use(morgan('dev'));
 
 // helper functons
-const userLookUpByEmail = require('./helpers');
+const { userLookUpByEmail } = require('./helpers');
 
 ////////////////////////////////////////////////////
 // Databases

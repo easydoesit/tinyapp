@@ -14,4 +14,4 @@ const userLookUpByEmail = function(email, database) {
 
 };
 
-module.exports = {userLookUpByEmail};
+module.exports = { userLookUpByEmail };

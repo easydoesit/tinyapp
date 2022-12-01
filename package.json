@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "./node_modules/.bin/nodemon -L express_server.js --ignore ./data/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -20,10 +20,11 @@
   "homepage": "https://github.com/easydoesit/tinyapp#readme",
   "devDependencies": {
     "bcryptjs": "^2.4.3",
-    "cookie-parser": "^1.4.6",
+    "chai": "^4.3.7",
     "cookie-session": "^2.0.0",
     "ejs": "^3.1.8",
     "express": "^4.18.2",
+    "mocha": "^10.1.0",
     "morgan": "^1.10.0",
     "nodemon": "^2.0.20"
   }
