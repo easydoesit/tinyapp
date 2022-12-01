@@ -12,8 +12,6 @@ app.set("view engine", "ejs");
 // parse data in buffer to make it readable.
 app.use(express.urlencoded({ extended: true }));
 
-// file-system Setup
-const fs = require('fs');
 
 // middleware set up
 const morgan = require("morgan");
@@ -122,7 +120,7 @@ app.post("/login", (req, res) => {
 
   }
 
-  if (!userCheckPassword(password)) {
+  if (!userCheckPassword(password, users)) {
     const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. That password is wrong"};
     return res.status(401).render('errors', templateVars);
   }
@@ -154,7 +152,7 @@ app.get("/urls", (req, res) => {
   }
   
   const templateVars = {
-    urls: urlsForUser(userID),
+    urls: urlsForUser(userID, urlDatabase),
     user: users[req.session.userID]
   };
 

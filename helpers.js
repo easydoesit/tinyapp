@@ -1,3 +1,9 @@
+// file-system Setup
+const fs = require('fs');
+
+// bcrypt setup
+const bcrypt = require("bcryptjs");
+
 // look up user by email
 const userLookUpByEmail = function(email, database) {
   let userID;
@@ -29,14 +35,14 @@ const writeToFile = function(file, body) {
 };
 
 // make an object of the URLS for a user.
-const urlsForUser = function(userID) {
+const urlsForUser = function(userID, database) {
   const usersURLs = {};
 
-  for (let key of Object.keys(urlDatabase)) {
+  for (let key of Object.keys(database)) {
     
-    if (urlDatabase[key].userID === userID) {
+    if (database[key].userID === userID) {
       usersURLs[key] = {};
-      usersURLs[key].longURL = urlDatabase[key].longURL;
+      usersURLs[key].longURL = database[key].longURL;
     }
 
   }
@@ -45,11 +51,11 @@ const urlsForUser = function(userID) {
 };
 
 // check user password
-const userCheckPassword = function(password) {
+const userCheckPassword = function(password, database) {
   let passwordCheck = false;
 
-  for (let key of Object.keys(users)) {
-    if  (bcrypt.compareSync(password, users[key].password)) {
+  for (let key of Object.keys(database)) {
+    if  (bcrypt.compareSync(password, database[key].password)) {
       passwordCheck = true;
     }
   
