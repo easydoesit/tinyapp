@@ -19,6 +19,9 @@ const fs = require('fs');
 const morgan = require("morgan");
 app.use(morgan('dev'));
 
+// helper functons
+const userLookUpByEmail = require('./helpers');
+
 ////////////////////////////////////////////////////
 // Databases
 ////////////////////////////////////////////////////
@@ -27,11 +30,17 @@ const urlDatabase = require("./data/urlDataBase.json");
 const users = require("./data/users.json");
 
 ////////////////////////////////////////////////////
-// Cookies
+// session
 ////////////////////////////////////////////////////
 
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+const cookieSession = require('cookie-session');
+
+app.use(cookieSession({
+  name: 'session',
+  keys: ['not sure yet'],
+
+  maxAge: 24 * 60 * 60 * 1000
+}));
 
 ////////////////////////////////////////////////////
 // Routes
@@ -47,12 +56,12 @@ app.get("/hello", (req, res) => {
 
 // register
 app.get("/register", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
   if (userID) {
     return res.redirect('/urls');
   }
 
-  const templateVars = { user: users[req.cookies["userID"]]};
+  const templateVars = { user: users[req.session.userID]};
   res.render("register", templateVars);
 });
 
@@ -62,22 +71,21 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   if (!email || !password) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. You must include a name and password."};
-    
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 400. You must include a name and password."};
+
     return res.status(400).render('errors', templateVars);
   
   }
   
-  if (userLookUpByEmail(email)) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. That email already exists."};
+  if (userLookUpByEmail(email, users)) {
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 400. That email already exists."};
     return res.status(400).render('errors', templateVars);
 
   }
 
-  const userID = generateRandomString(6);
-  users[userID] = {id: userID, email : email, password : hashedPassword};
+  req.session.userID = generateRandomString(6);
+  users[req.session.userID] = {id: req.session.userID, email : email, password : hashedPassword};
   writeToFile('./data/users.json', users);
-  res.cookie('userID', userID);
   res.redirect(301, '/urls');
 
 });
@@ -85,12 +93,12 @@ app.post("/register", (req, res) => {
 // Login Get and Render
 
 app.get("/login", (req, res) =>{
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
   if (userID) {
     return res.redirect('/urls');
   }
 
-  const templateVars = { user: users[req.cookies["userID"]]};
+  const templateVars = { user: users[req.session.userID]};
   res.render("login", templateVars);
 
 });
@@ -99,31 +107,28 @@ app.get("/login", (req, res) =>{
 app.post("/login", (req, res) => {
 
   const email = req.body.email;
-  console.log(email);
   const password = req.body.password;
 
   if (!email || !password) {
 
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 400. You must include a name and password."};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 400. You must include a name and password."};
     return res.status(403).render('errors', templateVars);
   
   }
   
-  if (!userLookUpByEmail(email)) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 403. That email doesnt' exist"};
+  if (!userLookUpByEmail(email, users)) {
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 403. That email doesnt' exist"};
     return res.status(403).render('errors', templateVars);
 
   }
 
   if (!userCheckPassword(password)) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. That password is wrong"};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. That password is wrong"};
     return res.status(401).render('errors', templateVars);
   }
 
-  const userID = userLookUpByEmail(email);
+  req.session.userID = userLookUpByEmail(email, users);
   
-  res.cookie('userID', userID);
-
   res.redirect(303, `/urls`);
 
 });
@@ -131,7 +136,7 @@ app.post("/login", (req, res) => {
 // Sign Out
 app.post("/logout", (req, res) => {
 
-  res.clearCookie('userID', req.body);
+  req.session = null;
 
   res.redirect(303, `/login`);
 
@@ -139,10 +144,10 @@ app.post("/logout", (req, res) => {
 
 // All Urls List
 app.get("/urls", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
 
   if (!userID) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You need to log in to see urls"};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. You need to log in to see urls"};
     
     return res.status(401).render('errors', templateVars);
   
@@ -150,7 +155,7 @@ app.get("/urls", (req, res) => {
   
   const templateVars = {
     urls: urlsForUser(userID),
-    user: users[req.cookies["userID"]]
+    user: users[req.session.userID]
   };
 
   res.render('urls_index', templateVars);
@@ -159,12 +164,12 @@ app.get("/urls", (req, res) => {
 
 // New URL Form SHOW
 app.get("/urls/new", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
   if (!userID) {
     return res.redirect('/login');
   }
 
-  const templateVars = { user: users[req.cookies["userID"]]};
+  const templateVars = { user: users[req.session.userID]};
 
   res.render("urls_new", templateVars);
 
@@ -172,14 +177,14 @@ app.get("/urls/new", (req, res) => {
 
 // Submit new URL
 app.post("/urls", (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
   if (!userID) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You must login to shorten an url."};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. You must login to shorten an url."};
     return res.status(401).render('errors', templateVars);
   }
-  console.log(req.body.longURL);
+
   const shortUrl = generateRandomString(6);
-  console.log(shortUrl);
+ 
   urlDatabase[shortUrl] = {
     longURL : req.body.longURL,
     userID : userID
@@ -192,7 +197,7 @@ app.post("/urls", (req, res) => {
 
 // Update an URL
 app.post("/urls/:id", (req, res) => {
-  console.log(req.body);
+
   const shortUrl = [req.params.id];
   urlDatabase[shortUrl].longURL = req.body.longURL;
 
@@ -204,52 +209,53 @@ app.post("/urls/:id", (req, res) => {
 
 // Delete URL
 app.post(`/urls/:id/delete`, (req, res) => {
-  const userID = req.cookies.userID;
+  const userID = req.session.userID;
 
   if (!userID) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You must login."};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. You must login."};
     return res.status(401).render('errors', templateVars);
   }
 
   if (!urlDatabase[req.params.id]) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Im sorry that url doesn't exist"};
+    const templateVars = { user: users[req.session.userID], noURLID: "Im sorry that url doesn't exist"};
     return res.render('errors', templateVars);
   }
   
   if (urlDatabase[req.params.id].userID !== userID) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. No ShortURl Like that."};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. No ShortURl Like that."};
     return res.status(401).render('errors', templateVars);
   }
 
   delete urlDatabase[req.params.id];
 
   writeToFile('./data/urlDataBase.json', urlDatabase);
-  const templateVars = { user: users[req.cookies["userID"]]};
-  res.redirect(301, '/urls', templateVars);
+  
+  const templateVars = { user: req.session.userID};
+  res.redirect('/urls', 301, templateVars);
 
 });
 
 // Show Url by ID
 app.get("/urls/:id", (req, res) => {
-  const userID = req.cookies.userID;
-  console.log(req.params);
+  const userID = req.session.userID;
+
 
   if (!userID) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. You must login."};
+    const templateVars = { user: req.session.userID, noURLID: "Error: 401. You must login."};
     return res.status(401).render('errors', templateVars);
   }
  
   if (!urlDatabase[req.params.id]) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Im sorry that url doesn't exist"};
+    const templateVars = { user: req.session.userID, noURLID: "Im sorry that url doesn't exist"};
     return res.render('errors', templateVars);
   }
 
   if (urlDatabase[req.params.id].userID !== userID) {
-    const templateVars = { user: users[req.cookies["userID"]], noURLID: "Error: 401. No ShortURl Like that."};
+    const templateVars = { user: req.session.userID, noURLID: "Error: 401. No ShortURl Like that."};
     return res.status(401).render('errors', templateVars);
   }
   
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies["userID"]] };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userID] };
   res.render("urls_show", templateVars);
 
 
@@ -258,7 +264,7 @@ app.get("/urls/:id", (req, res) => {
 // Redirect to Long URL
 app.get("/u/:id", (req, res) => {
   const longURL = (urlDatabase[req.params.id].longURL);
-  const templateVars = { user: users[req.cookies["userID"]]};
+  const templateVars = { user: users[req.session.userID]};
 
   if (longURL === undefined) {
     res.render('urls_noID', templateVars);
@@ -308,21 +314,6 @@ const writeToFile = function(file, body) {
   });
 };
 
-// look up user by email
-const userLookUpByEmail = function(email) {
-  let userID;
-  
-  for (let key of Object.keys(users)) {
-
-    if (users[key].email === email) {
-      userID = key;
-    }
-  
-  }
-
-  return userID;
-
-};
 
 // check user password
 const userCheckPassword = function(password) {
