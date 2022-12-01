@@ -143,7 +143,7 @@ app.post("/logout", (req, res) => {
 // All Urls List
 app.get("/urls", (req, res) => {
   const userID = req.session.userID;
-
+  console.log(req.sessionOptions);
   if (!userID) {
     const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. You need to log in to see urls"};
     
@@ -198,10 +198,11 @@ app.post("/urls/:id", (req, res) => {
 
   const shortUrl = [req.params.id];
   urlDatabase[shortUrl].longURL = req.body.longURL;
-
   writeToFile('./data/urlDataBase.json', urlDatabase);
+
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userID] };
   
-  res.redirect(303, `/urls/${shortUrl}`);
+  res.redirect(`/urls/${shortUrl}`, 303, templateVars);
 
 });
 
@@ -239,17 +240,17 @@ app.get("/urls/:id", (req, res) => {
 
 
   if (!userID) {
-    const templateVars = { user: req.session.userID, noURLID: "Error: 401. You must login."};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. You must login."};
     return res.status(401).render('errors', templateVars);
   }
  
   if (!urlDatabase[req.params.id]) {
-    const templateVars = { user: req.session.userID, noURLID: "Im sorry that url doesn't exist"};
+    const templateVars = { user: users[req.session.userID], noURLID: "Im sorry that url doesn't exist"};
     return res.render('errors', templateVars);
   }
 
   if (urlDatabase[req.params.id].userID !== userID) {
-    const templateVars = { user: req.session.userID, noURLID: "Error: 401. No ShortURl Like that."};
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. No ShortURl Like that."};
     return res.status(401).render('errors', templateVars);
   }
   
@@ -262,13 +263,13 @@ app.get("/urls/:id", (req, res) => {
 // Redirect to Long URL
 app.get("/u/:id", (req, res) => {
   const longURL = (urlDatabase[req.params.id].longURL);
-  const templateVars = { user: users[req.session.userID]};
 
-  if (longURL === undefined) {
-    res.render('urls_noID', templateVars);
-  } else {
-    res.redirect(301, longURL);
+  if (longURL === "") {
+    const templateVars = { user: users[req.session.userID], noURLID: "Error: No Long URL defined."};
+    return res.status(401).render('errors', templateVars);
   }
+  
+  return res.redirect(longURL);
 
 });
 
