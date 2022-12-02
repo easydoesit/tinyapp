@@ -3,6 +3,7 @@ const fs = require('fs');
 
 // bcrypt setup
 const bcrypt = require("bcryptjs");
+const { match } = require('assert');
 
 // look up user by email
 const userLookUpByEmail = function(email, database) {
@@ -80,5 +81,19 @@ const generateRandomString = function(size) {
 
 };
 
+const readabletime = function(timestamp) {
+  const date = new Date(timestamp);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const month = months[date.getMonth()];
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const day = days[date.getDay()];
+  const dOfMonth = date.getDate();
+  const hour  = date.getHours();
+  const minutes = date.getMinutes();
+  //const seconds = date.getSeconds();
+  
+  const time = `${day}, ${month} ${dOfMonth} at ${hour}:${minutes} GMT`;
+  return time;
+};
 
-module.exports = { userLookUpByEmail, writeToFile, urlsForUser, userCheckPassword, generateRandomString };
+module.exports = { userLookUpByEmail, writeToFile, urlsForUser, userCheckPassword, generateRandomString, readabletime };

@@ -26,6 +26,8 @@
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
             <th scope="col"># of Clicks</th>
+            <th scope="col">unique visitors</th>
+            <th></th>
             <th></th>
           </tr>
         </thead>
@@ -35,6 +37,7 @@
               <td><a href="/u/<%= id %>"><%= id %></a></td>
               <td><%= urls[id].longURL %></td>
               <td><%= urls[id].count %></td>
+              <td></td>
               <td><a href="/urls/<%= id %>"><button class ="btn btn-primary">Edit</button></a></td>
               <td><form method="POST" action="/urls/<%= id %>?_method=DELETE"><button class ="btn btn-danger" type = "submit">Delete</button></form></td>
             </tr>

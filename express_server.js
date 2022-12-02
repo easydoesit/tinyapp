@@ -22,7 +22,7 @@ const methodOverride = require('method-override');
 app.use(methodOverride('_method'));
 
 // helper functons
-const { userLookUpByEmail, writeToFile, userCheckPassword, urlsForUser, generateRandomString } = require('./helpers');
+const { userLookUpByEmail, writeToFile, userCheckPassword, urlsForUser, generateRandomString, readabletime, } = require('./helpers');
 
 ////////////////////////////////////////////////////
 // Databases
@@ -30,6 +30,7 @@ const { userLookUpByEmail, writeToFile, userCheckPassword, urlsForUser, generate
 
 const urlDatabase = require("./data/urlDataBase.json");
 const users = require("./data/users.json");
+const urlVisits = require("./data/urlVisits.json");
 
 ////////////////////////////////////////////////////
 // session
@@ -206,7 +207,7 @@ app.put("/urls/:id", (req, res) => {
   urlDatabase[shortUrl].count = 0;
   writeToFile('./data/urlDataBase.json', urlDatabase);
 
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userID] };
+  const templateVars = { id: shortUrl, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userID]};
   
   res.redirect(`/urls/${shortUrl}`, 303, templateVars);
 
@@ -214,7 +215,7 @@ app.put("/urls/:id", (req, res) => {
 
 // Delete URL
 
-app.delete(`/urls/:id`, (req, res) => {
+app.delete("/urls/:id", (req, res) => {
   const userID = req.session.userID;
 
   if (!userID) {
@@ -244,7 +245,8 @@ app.delete(`/urls/:id`, (req, res) => {
 // Show Url by ID
 app.get("/urls/:id", (req, res) => {
   const userID = req.session.userID;
-
+  //console.log(userID);
+  const shortUrl = req.params.id;
 
   if (!userID) {
     const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. You must login."};
@@ -261,7 +263,8 @@ app.get("/urls/:id", (req, res) => {
     return res.status(401).render('errors', templateVars);
   }
   
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userID] };
+  const templateVars = { id: shortUrl, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userID], visits: urlVisits[shortUrl]};
+  console.log(templateVars);
   res.render("urls_show", templateVars);
 
 
@@ -275,8 +278,14 @@ app.get("/u/:id", (req, res) => {
     const templateVars = { user: users[req.session.userID], noURLID: "Error: No Long URL defined."};
     return res.status(401).render('errors', templateVars);
   }
+  const visitID = generateRandomString(6);
+  const timeClick = readabletime(Date.now());
+
   urlDatabase[req.params.id].count += 1;
+
+  urlVisits[req.params.id][visitID] = timeClick;
   writeToFile('./data/urlDataBase.json', urlDatabase);
+  writeToFile('./data/urlVisits.json', urlVisits);
   return res.redirect(longURL);
 
 });
