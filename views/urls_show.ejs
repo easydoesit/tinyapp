@@ -40,17 +40,18 @@
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">TimeStamp</th>
             <th scope="col">Unique User</th>
+            <th scope="col">TimeStamp</th>
           </tr>
         </thead>
         <tbody>
-          <% for (let key of Object.keys(visits)) { %>
+          <% if (visits) {
+            for (let key of Object.keys(visits)) { %>
             <tr>
-              <td><%= visits[key] %></td>
               <td><%= key %></td>
+              <td><%= visits[key] %></td>
             </tr>
-            <% } %>
+            <% } } %>
         </tbody>
       </table>
     <!-- Bootstrap JS -->

@@ -29,7 +29,7 @@ const writeToFile = function(file, body) {
     if (err) {
       console.log('Error writing file', err);
     } else {
-      console.log('Successfully wrote file');
+      console.log(`Successfully wrote file: ${file}.`);
     }
 
   });
@@ -45,6 +45,7 @@ const urlsForUser = function(userID, database) {
       usersURLs[key] = {};
       usersURLs[key].longURL = database[key].longURL,
       usersURLs[key].count = database[key].count;
+      usersURLs[key].uniques = database[key].uniques;
     }
 
   }
@@ -64,6 +65,24 @@ const userCheckPassword = function(password, database) {
   }
 
   return passwordCheck;
+
+};
+
+// check if user is unique
+const checkUniqueUser = function(userID, database, id) {
+  console.log(userID);
+  //console.log(database);
+  console.log(id);
+  let unique = true;
+  for (let key of Object.keys(database[id])) {
+    console.log(key);
+    if (key === userID) {
+      unique = false;
+      console.log(unique);
+    }
+
+  }
+  return unique;
 
 };
 
@@ -96,4 +115,4 @@ const readabletime = function(timestamp) {
   return time;
 };
 
-module.exports = { userLookUpByEmail, writeToFile, urlsForUser, userCheckPassword, generateRandomString, readabletime };
+module.exports = { userLookUpByEmail, writeToFile, urlsForUser, userCheckPassword, generateRandomString, readabletime, checkUniqueUser };
