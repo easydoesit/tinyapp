@@ -42,7 +42,8 @@ const urlsForUser = function(userID, database) {
     
     if (database[key].userID === userID) {
       usersURLs[key] = {};
-      usersURLs[key].longURL = database[key].longURL;
+      usersURLs[key].longURL = database[key].longURL,
+      usersURLs[key].count = database[key].count;
     }
 
   }

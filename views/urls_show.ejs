@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta http-equiv="Cache-control" content="no-cache">
     <!-- Bootstrap CSS -->
     <link
       rel="stylesheet"
@@ -22,7 +21,7 @@
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
         <h4 class="card-title">EDIT</h4>
-          <form class="form-inline" style ="margin: 0 auto; width: 600px;"action="/urls/<%= id %>" method="POST">
+          <form class="form-inline" style ="margin: 0 auto; width: 600px;"action="/urls/<%= id %>?_method=PUT" method="POST">
             <div class="form-group mb-2">
               <label for="longURL">Edit Your URL:</label>
               <input

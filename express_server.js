@@ -13,9 +13,13 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({ extended: true }));
 
 
-// middleware set up
+// middleware setup
 const morgan = require("morgan");
 app.use(morgan('dev'));
+
+// method override setup
+const methodOverride = require('method-override');
+app.use(methodOverride('_method'));
 
 // helper functons
 const { userLookUpByEmail, writeToFile, userCheckPassword, urlsForUser, generateRandomString } = require('./helpers');
@@ -143,7 +147,7 @@ app.post("/logout", (req, res) => {
 // All Urls List
 app.get("/urls", (req, res) => {
   const userID = req.session.userID;
-  console.log(req.sessionOptions);
+  
   if (!userID) {
     const templateVars = { user: users[req.session.userID], noURLID: "Error: 401. You need to log in to see urls"};
     
@@ -185,7 +189,8 @@ app.post("/urls", (req, res) => {
  
   urlDatabase[shortUrl] = {
     longURL : req.body.longURL,
-    userID : userID
+    userID : userID,
+    count: 0
   };
   writeToFile('./data/urlDataBase.json', urlDatabase);
 
@@ -194,10 +199,11 @@ app.post("/urls", (req, res) => {
 });
 
 // Update an URL
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
 
   const shortUrl = [req.params.id];
   urlDatabase[shortUrl].longURL = req.body.longURL;
+  urlDatabase[shortUrl].count = 0;
   writeToFile('./data/urlDataBase.json', urlDatabase);
 
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.userID] };
@@ -207,7 +213,8 @@ app.post("/urls/:id", (req, res) => {
 });
 
 // Delete URL
-app.post(`/urls/:id/delete`, (req, res) => {
+
+app.delete(`/urls/:id`, (req, res) => {
   const userID = req.session.userID;
 
   if (!userID) {
@@ -268,7 +275,8 @@ app.get("/u/:id", (req, res) => {
     const templateVars = { user: users[req.session.userID], noURLID: "Error: No Long URL defined."};
     return res.status(401).render('errors', templateVars);
   }
-  
+  urlDatabase[req.params.id].count += 1;
+  writeToFile('./data/urlDataBase.json', urlDatabase);
   return res.redirect(longURL);
 
 });
