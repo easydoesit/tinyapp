@@ -3,7 +3,6 @@ const fs = require('fs');
 
 // bcrypt setup
 const bcrypt = require("bcryptjs");
-const { match } = require('assert');
 
 // look up user by email
 const userLookUpByEmail = function(email, database) {
@@ -70,9 +69,6 @@ const userCheckPassword = function(password, database) {
 
 // check if user is unique
 const checkUniqueUser = function(userID, database, id) {
-  console.log(userID);
-  //console.log(database);
-  console.log(id);
   let unique = true;
   for (let key of Object.keys(database[id])) {
     console.log(key);
@@ -109,8 +105,6 @@ const readabletime = function(timestamp) {
   const dOfMonth = date.getDate();
   const hour  = date.getHours();
   const minutes = date.getMinutes();
-  //const seconds = date.getSeconds();
-  
   const time = `${day}, ${month} ${dOfMonth} at ${hour}:${minutes} GMT`;
   return time;
 };

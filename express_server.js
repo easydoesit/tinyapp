@@ -55,13 +55,18 @@ app.use(cookieParser());
 // Routes
 ////////////////////////////////////////////////////
 
-app.get('/', (req, res) => {
-  res.send("Hello!");
+//
+app.get("/", (req, res) => {
+  const userID = req.session.userID;
+
+  if (!userID) {
+    return res.redirect('/login');
+  }
+
+  return res.redirect('/urls');
+
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
 
 // register
 app.get("/register", (req, res) => {
@@ -168,7 +173,6 @@ app.get("/urls", (req, res) => {
     urls: urlsForUser(userID, urlDatabase),
     user: users[req.session.userID]
   };
-  console.log(templateVars);
   res.render('urls_index', templateVars);
 
 });
@@ -258,7 +262,6 @@ app.delete("/urls/:id", (req, res) => {
 // Show Url by ID
 app.get("/urls/:id", (req, res) => {
   const userID = req.session.userID;
-  //console.log(userID);
   const shortUrl = req.params.id;
 
   if (!userID) {
@@ -277,7 +280,6 @@ app.get("/urls/:id", (req, res) => {
   }
   
   const templateVars = { id: shortUrl, longURL: urlDatabase[req.params.id].longURL, created : urlDatabase[req.params.id].created, user: users[req.session.userID], visits: urlVisits[shortUrl]};
-  console.log(templateVars.visits);
   res.render("urls_show", templateVars);
 
 
@@ -289,7 +291,7 @@ app.get("/u/:id", (req, res) => {
   const userID = users[req.session.userID];
   let cookieID;
 
-  if (longURL === "") {
+  if (!longURL) {
     const templateVars = { user: userID, noURLID: "Error: No Long URL defined."};
     return res.status(401).render('errors', templateVars);
   }
