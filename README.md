@@ -23,7 +23,7 @@ Stats include:
 ## Getting Started
 
 - Install all dependencies (using the `npm install` command).
-- Run the development web server using the `node express_server.js` command.
+- Run the development web server using the `node start` command.
 
 #Documentation:
 
@@ -38,5 +38,6 @@ The following functions are used in the helpers.js file
 - readabletime(timestamp) | takes in a computer generated Date.now() and makes it easier to read.
 
 ## Final Product
+
 !["Screenshot of URLs page"](https://github.com/easydoesit/tinyapp/blob/master/docs/TinyApp01.png)
 !["Screenshot of URL edit page"](https://github.com/easydoesit/tinyapp/blob/master/docs/TinyApp02.png)
