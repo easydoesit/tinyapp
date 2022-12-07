@@ -36,3 +36,7 @@ The following functions are used in the helpers.js file
 - checkUniqueUser(userID, database, id) | checks to see if a user is unique depending on whether or not their cookie id has been stored.
 - generateRandomString(size) Will generate a random string from CAPITAL and small letters as well as numbers. Useful for random ID's.
 - readabletime(timestamp) | takes in a computer generated Date.now() and makes it easier to read.
+
+## Final Product
+!["Screenshot of URLs page"](https://github.com/easydoesit/tinyapp/blob/master/docs/TinyApp01.png)
+!["Screenshot of URL edit page"](https://github.com/easydoesit/tinyapp/blob/master/docs/TinyApp02.png)
